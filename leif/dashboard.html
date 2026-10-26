@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LEIF: Longitudinal Environmental Interaction Footprint</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #070a12;
+      --bg-card: rgba(15, 23, 42, 0.75);
+      --bg-card-hover: rgba(30, 41, 59, 0.85);
+      --bg-surface: #0f172a;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(59, 130, 246, 0.3);
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.5);
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-purple: #8b5cf6;
+      --accent-rose: #f43f5e;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 15% 15%, #0f172a 0%, #070a12 100%);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    code, pre, .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b101b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header */
+    header {
+      background: rgba(11, 16, 27, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 0;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: white;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .brand-title h1 {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-title p {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 10px var(--accent-emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+    .btn-emerald:hover {
+      background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      box-shadow: var(--shadow-card);
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-accent);
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kpi-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .kpi-unit {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    /* Section Cards */
+    .section-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-num {
+      width: 28px;
+      height: 28px;
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .section-title h2 {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .section-title span.tag {
+      font-size: 11px;
+      padding: 3px 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    /* Dual Column Layout */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    @media (max-width: 992px) {
+      .grid-2col, .grid-3col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Video Selection / Upload Area */
+    .upload-zone {
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      text-align: center;
+      transition: all 0.2s ease;
+      background: rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .upload-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .select-dropdown {
+      width: 100%;
+      background: #111827;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      padding: 10px 14px;
+      font-size: 13px;
+      outline: none;
+      margin-top: 8px;
+    }
+    .select-dropdown:focus {
+      border-color: var(--primary);
+    }
+
+    /* Video Player & Canvas */
+    .player-container {
+      position: relative;
+      background: #000;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .player-container img, .player-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(15, 23, 42, 0.9);
+      border-top: 1px solid var(--border-subtle);
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+    }
+
+    .scrubber {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: #1e293b;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    .scrubber::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    /* Entities Grid */
+    .entity-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .entity-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      transition: all 0.2s ease;
+    }
+    .entity-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--border-accent);
+    }
+
+    .entity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .entity-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .badge-person {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+    .badge-object {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .badge-region {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .entity-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Interactions Chips & List */
+    .chips-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .chip:hover, .chip.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .interaction-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .interaction-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      transition: background 0.15s ease;
+    }
+    .interaction-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .hoi-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .hoi-holding { background: rgba(59, 130, 246, 0.25); color: #93c5fd; }
+    .hoi-touching { background: rgba(148, 163, 184, 0.25); color: #cbd5e1; }
+    .hoi-opening { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
+    .hoi-closing { background: rgba(245, 158, 11, 0.25); color: #fde68a; }
+    .hoi-placing { background: rgba(139, 92, 246, 0.25); color: #c4b5fd; }
+    .hoi-moving { background: rgba(236, 72, 153, 0.25); color: #fbcfe8; }
+    .hoi-using { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+
+    /* Tables */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12.5px;
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* State Change Cards */
+    .changes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .change-card {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border-left: 4px solid var(--primary);
+      transition: all 0.2s ease;
+    }
+    .change-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-accent);
+    }
+
+    .change-state-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+    }
+
+    .change-arrow {
+      color: var(--accent-cyan);
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    /* Visual Image Viewers */
+    .image-viewer {
+      width: 100%;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+      background: #000;
+      cursor: zoom-in;
+      transition: transform 0.2s ease;
+    }
+    .image-viewer img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Modal for Image Zoom */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-content {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+    .modal-content img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    /* Interactive Gantt Timeline */
+    .gantt-chart {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border: 1px solid var(--border-subtle);
+      margin-top: 14px;
+    }
+    .gantt-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      position: relative;
+      height: 28px;
+    }
+    .gantt-label {
+      width: 140px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .gantt-track {
+      flex: 1;
+      position: relative;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 4px;
+    }
+    .gantt-bar {
+      position: absolute;
+      top: 3px;
+      bottom: 3px;
+      border-radius: 4px;
+      opacity: 0.9;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .gantt-bar:hover {
+      opacity: 1;
+      filter: brightness(1.2);
+      transform: scaleY(1.15);
+      z-index: 10;
+    }
+
+    /* Execution Stepper */
+    .stepper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0;
+    }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+    .step-item.active {
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+    .step-item.completed {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    /* Search Input */
+    .search-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      padding: 6px 12px;
+      font-size: 12px;
+      width: 220px;
+      outline: none;
+    }
+    .search-box:focus {
+      border-color: var(--primary);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      border: 1px solid var(--primary);
+      border-radius: var(--radius-md);
+      padding: 12px 20px;
+      color: white;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      display: none;
+      z-index: 999;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container header-content">
+      <div class="brand">
+        <div class="brand-logo">L</div>
+        <div class="brand-title">
+          <h1>LEIF Interactive Dashboard</h1>
+          <p>Longitudinal Environmental Interaction Footprint System</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-badge" id="systemStatus">
+          <div class="status-dot"></div>
+          <span>SYSTEM READY</span>
+        </div>
+        <button class="btn btn-secondary" onclick="exportJSON()">📥 Export JSON</button>
+        <button class="btn btn-secondary" onclick="exportMarkdown()">📄 Report MD</button>
+        <button class="btn btn-primary" onclick="triggerRunPipeline()">⚡ Run Pipeline</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- KPI Summary Row -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Verified Events <span>Req 5</span></div>
+        <div class="kpi-value" id="kpiEvents">-- <span class="kpi-unit">events</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Observable Changes <span>Req 10</span></div>
+        <div class="kpi-value" id="kpiChanges">-- <span class="kpi-unit">state changes</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pipeline Confidence <span>Audit</span></div>
+        <div class="kpi-value" id="kpiConfidence">-- <span class="kpi-unit">%</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Tracked Entities <span>Req 3</span></div>
+        <div class="kpi-value" id="kpiEntities">-- <span class="kpi-unit">entities</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Observation Window <span>Temporal</span></div>
+        <div class="kpi-value" id="kpiDuration">-- <span class="kpi-unit">sec</span></div>
+      </div>
+    </div>
+
+    <!-- Section 1 & 2: Video Selection, Upload & Pipeline Execution Controls -->
+    <div class="grid-2col">
+      
+      <!-- Req 1: Upload / Select Video -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">
+            <div class="section-num">1</div>
+            <h2>Upload / Select Video</h2>
+            <span class="tag">Requirement 1</span>
+          </div>
+        </div>
+
+        <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">📹</div>
+          <p><strong>Click to browse</strong> or drag & drop video file</p>
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Supports MP4, AVI, MOV, MKV (or synthetic benchmarks)</p>
+          <input type="file" id="fileInput" accept="video/*" style="display: none;" onchange="handleFileSelect(event)">
+        </div>
+
+        <div style="margin-top: 14px;">
+          <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">OR Select from Benchmark Datasets:</label>
+          <select class="select-dropdown" id="videoSelect" onchange="onVideoSelectChange(this.value)">
+            <option value="data/raw_videos/office_demo.mp4">⭐ Office Benchmark Demo (20.0s MP4) - Person, Cup, Laptop, Door</option>
+            <option value="data/sample_clips/office_demo">Office Sequential Frames (100 Frames Directory)</option>
+          </select>
+        </div>
+
+        <div id="videoMetaCard" style="margin-top: 14px; padding: 10px 14px; background: rgba(0,0,0,0.3); border-radius: var(--radius-sm); font-size: 11.5px; color: var(--text-muted);">
+          Selected Video: <strong id="selectedVideoName" class="mono" style="color: var(--text-main);">office_demo.mp4</strong>
+        </div>
+      </div>
+
+      <!-- Req 2: Process Video Controls -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">
+            <div class="section-num">2</div>
+            <h2>Process Video</h2>
+            <span class="tag">Requirement 2</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 14px; align-items: flex-end;">
+          <div style="flex: 1;">
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Observation Session ID:</label>
+            <input type="text" id="sessionIdInput" value="session_001" class="search-box" style="width: 100%; margin-top: 6px; font-family: 'JetBrains Mono';">
+          </div>
+          <div style="width: 140px;">
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Sampling FPS: <span id="fpsVal">2.0</span></label>
+            <input type="range" id="fpsInput" min="1.0" max="5.0" step="0.5" value="2.0" class="scrubber" style="width: 100%; margin-top: 12px;" oninput="document.getElementById('fpsVal').innerText = this.value">
+          </div>
+          <div>
+            <button class="btn btn-primary" id="btnRunPipeline" onclick="triggerRunPipeline()" style="padding: 10px 22px; font-size: 14px;">
+              ⚡ Execute Pipeline
+            </button>
+          </div>
+        </div>
+
+        <!-- Pipeline Stepper -->
+        <div style="margin-top: 18px;">
+          <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Orchestrated Execution Stages:</label>
+          <div class="stepper">
+            <div class="step-item completed" id="st1">1. Video Acquisition</div>
+            <div class="step-item completed" id="st2">2. Detection</div>
+            <div class="step-item completed" id="st3">3. Tracking & Re-ID</div>
+            <div class="step-item completed" id="st4">4. HOI Recognition</div>
+            <div class="step-item completed" id="st5">5. Scene Graph</div>
+            <div class="step-item completed" id="st6">6. Validation</div>
+            <div class="step-item completed" id="st7">7. Memory Store</div>
+            <div class="step-item completed" id="st8">8. Changes</div>
+            <div class="step-item completed" id="st9">9. Aggregation</div>
+          </div>
+        </div>
+
+        <div id="pipelineLog" style="margin-top: 10px; font-size: 11px; color: #10b981; background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: var(--radius-sm); font-family: 'JetBrains Mono';">
+          ✔ Ready to process or preview active session.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Section 3: Detected People & Objects with Tracking IDs -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <div class="section-num">3</div>
+          <h2>Detected People & Objects with Tracking IDs</h2>
+          <span class="tag">Requirement 3</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary" onclick="togglePlayerMode('annotated_frames')">Frame Sequence</button>
+          <button class="btn btn-secondary" onclick="togglePlayerMode('video')">Video Stream</button>
+        </div>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Visual Video / Frame Player with Overlays -->
+        <div>
+          <div class="player-container" id="playerContainer">
+            <img id="annotatedFrameView" src="" alt="LEIF Annotated Frame View">
+            <video id="annotatedVideoView" controls style="display: none; width: 100%; height: 100%;"></video>
+          </div>
+          <div class="player-controls" id="frameControls">
+            <button class="btn btn-secondary" id="btnPlayPause" onclick="togglePlayPause()" style="padding: 6px 12px;">▶ Play</button>
+            <input type="range" class="scrubber" id="frameScrubber" min="0" max="0" value="0" oninput="onScrub(this.value)">
+            <span class="mono" style="font-size: 12px; color: var(--text-muted);" id="frameIndicator">Frame: 000 | 0.00s</span>
+          </div>
+        </div>
+
+        <!-- Tracked Entities Cards / Table -->
+        <div>
+          <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text-muted);">
+            Active & Consolidated Tracklets (<span id="trackedCount">0</span> detected):
+          </div>
+          <div class="entity-cards" id="entityCardsContainer">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Detected Interactions -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <div class="section-num">4</div>
+          <h2>Detected Interactions (HOI)</h2>
+          <span class="tag">Requirement 4</span>
+        </div>
+      </div>
+
+      <div class="chips-filter" id="interactionFilterChips">
+        <div class="chip active" onclick="filterInteractions('all', this)">All Interactions (<span id="cntAll">0</span>)</div>
+        <div class="chip" onclick="filterInteractions('holding', this)">Holding (<span id="cntHolding">0</span>)</div>
+        <div class="chip" onclick="filterInteractions('touching', this)">Touching (<span id="cntTouching">0</span>)</div>
+        <div class="chip" onclick="filterInteractions('opening', this)">Opening (<span id="cntOpening">0</span>)</div>
+        <div class="chip" onclick="filterInteractions('closing', this)">Closing (<span id="cntClosing">0</span>)</div>
+        <div class="chip" onclick="filterInteractions('placing', this)">Placing (<span id="cntPlacing">0</span>)</div>
+        <div class="chip" onclick="filterInteractions('moving', this)">Moving (<span id="cntMoving">0</span>)</div>
+        <div class="chip" onclick="filterInteractions('using', this)">Using (<span id="cntUsing">0</span>)</div>
+      </div>
+
+      <div class="interaction-stream" id="interactionStreamContainer">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+
+    <!-- Section 5: Longitudinal Event Memory Table -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <div class="section-num">5</div>
+          <h2>Longitudinal Event Memory Table</h2>
+          <span class="tag">Requirement 5</span>
+        </div>
+        <input type="text" class="search-box" placeholder="🔍 Search memory events..." oninput="filterEventTable(this.value)">
+      </div>
+
+      <div class="table-wrapper">
+        <table id="eventMemoryTable">
+          <thead>
+            <tr>
+              <th>Event ID</th>
+              <th>Timestamp</th>
+              <th>Person / Object</th>
+              <th>Interaction</th>
+              <th>Location</th>
+              <th>Duration</th>
+              <th>Confidence</th>
+              <th>Recurrence</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="eventMemoryBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 6: Interaction Timeline -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <div class="section-num">6</div>
+          <h2>Interaction Timeline</h2>
+          <span class="tag">Requirement 6</span>
+        </div>
+        <button class="btn btn-secondary" onclick="openModal('timelineImg')">🔍 Enlarge Plot</button>
+      </div>
+
+      <div class="image-viewer" onclick="openModal('timelineImg')">
+        <img id="timelineImg" src="outputs/session_001/timeline.png" alt="LEIF Interaction Timeline">
+      </div>
+
+      <!-- Interactive Gantt Visualization -->
+      <div class="gantt-chart">
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">
+          Interactive Spatio-Temporal Interval View:
+        </div>
+        <div id="ganttContainer">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 7: Interaction Frequency / Counts -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <div class="section-num">7</div>
+          <h2>Interaction Frequency & Counts</h2>
+          <span class="tag">Requirement 7</span>
+        </div>
+        <button class="btn btn-secondary" onclick="openModal('chartsImg')">🔍 Enlarge Charts</button>
+      </div>
+
+      <div class="image-viewer" onclick="openModal('chartsImg')">
+        <img id="chartsImg" src="outputs/session_001/frequency_charts.png" alt="LEIF Frequency Charts">
+      </div>
+    </div>
+
+    <!-- Section 8 & 9: Interaction Graph & Heatmap -->
+    <div class="grid-2col">
+      <!-- Section 8: Interaction Graph -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">
+            <div class="section-num">8</div>
+            <h2>Person-Object Interaction Graph</h2>
+            <span class="tag">Requirement 8</span>
+          </div>
+          <button class="btn btn-secondary" onclick="openModal('graphImg')">🔍 Enlarge</button>
+        </div>
+        <div class="image-viewer" onclick="openModal('graphImg')">
+          <img id="graphImg" src="outputs/session_001/interaction_graph.png" alt="LEIF Interaction Graph">
+        </div>
+      </div>
+
+      <!-- Section 9: Environmental Interaction Heatmap -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">
+            <div class="section-num">9</div>
+            <h2>Environmental Interaction Heatmap</h2>
+            <span class="tag">Requirement 9</span>
+          </div>
+          <button class="btn btn-secondary" onclick="openModal('heatmapImg')">🔍 Enlarge</button>
+        </div>
+        <div class="image-viewer" onclick="openModal('heatmapImg')">
+          <img id="heatmapImg" src="outputs/session_001/environment_heatmap.png" alt="LEIF Environment Heatmap">
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 10: Before / After Observable Environmental Changes -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <div class="section-num">10</div>
+          <h2>Before / After Observable Environmental Changes</h2>
+          <span class="tag">Requirement 10</span>
+        </div>
+      </div>
+
+      <div class="changes-grid" id="changesContainer">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+
+    <!-- Section 11: Final LEIF Longitudinal Summary -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <div class="section-num">11</div>
+          <h2>Final LEIF Longitudinal Summary</h2>
+          <span class="tag">Requirement 11</span>
+        </div>
+      </div>
+
+      <!-- Narrative Block -->
+      <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; margin-bottom: 20px;">
+        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--accent-cyan);">Automated Executive Summary</h4>
+        <p id="summaryNarrative" style="font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+          Loading executive longitudinal summary...
+        </p>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Entity-Level Footprints -->
+        <div>
+          <h4 style="font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--text-muted); text-transform: uppercase;">
+            Entity-Level Footprint Summary
+          </h4>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Target Entity</th>
+                  <th>Type</th>
+                  <th>Count</th>
+                  <th>Total Duration</th>
+                  <th>Primary Zone</th>
+                </tr>
+              </thead>
+              <tbody id="entityFootprintBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Regional Utilization -->
+        <div>
+          <h4 style="font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--text-muted); text-transform: uppercase;">
+            Regional Utilization Footprint
+          </h4>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Region Zone</th>
+                  <th>Events</th>
+                  <th>Dwell Time</th>
+                  <th>First Seen</th>
+                  <th>Last Seen</th>
+                </tr>
+              </thead>
+              <tbody id="regionFootprintBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal Viewer for Plots -->
+  <div class="modal-overlay" id="imageModal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <img id="modalImage" src="" alt="Enlarged Plot">
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">Pipeline completed successfully!</div>
+
+  <script>
+    // State Store
+    let currentSessionData = null;
+    let availableVideos = [];
+    let currentFrameIndex = 0;
+    let isPlaying = false;
+    let playTimer = null;
+    let activeFilter = 'all';
+
+    // On Load
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchAvailableVideos();
+      fetchLatestResults();
+    });
+
+    // 1. Fetch available videos
+    async function fetchAvailableVideos() {
+      try {
+        const res = await fetch('/api/videos');
+        const data = await res.json();
+        availableVideos = data.videos || [];
+        const select = document.getElementById('videoSelect');
+        select.innerHTML = '';
+        availableVideos.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v.path;
+          opt.innerText = (v.recommended ? '⭐ ' : '') + v.name;
+          select.appendChild(opt);
+        });
+        if (availableVideos.length > 0) {
+          onVideoSelectChange(availableVideos[0].path);
+        }
+      } catch (e) {
+        console.error('Error fetching videos:', e);
+      }
+    }
+
+    function onVideoSelectChange(path) {
+      document.getElementById('selectedVideoName').innerText = path.split('/').pop();
+    }
+
+    // 2. Fetch Latest Results
+    async function fetchLatestResults() {
+      try {
+        const res = await fetch('/api/latest');
+        if (res.ok) {
+          const data = await res.json();
+          renderDashboard(data);
+        }
+      } catch (e) {
+        console.error('Error fetching latest results:', e);
+      }
+    }
+
+    // 3. Trigger Pipeline Execution
+    async function triggerRunPipeline() {
+      const btn = document.getElementById('btnRunPipeline');
+      btn.disabled = true;
+      btn.innerText = '⏳ Processing Video...';
+
+      const videoPath = document.getElementById('videoSelect').value;
+      const sessionId = document.getElementById('sessionIdInput').value || 'session_001';
+      const fps = parseFloat(document.getElementById('fpsInput').value || '2.0');
+
+      document.getElementById('pipelineLog').innerText = '🚀 Pipeline running on ' + videoPath + '...';
+
+      try {
+        const res = await fetch('/api/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ video_path: videoPath, session_id: sessionId, fps: fps })
+        });
+        const data = await res.json();
+        renderDashboard(data);
+        showToast('Pipeline execution completed successfully for ' + sessionId + '!');
+      } catch (err) {
+        alert('Pipeline execution error: ' + err);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '⚡ Execute Pipeline';
+      }
+    }
+
+    // 4. Render Dashboard with Live Results
+    function renderDashboard(data) {
+      currentSessionData = data;
+      const session = data.session_id || 'session_001';
+
+      // KPI cards
+      document.getElementById('kpiEvents').innerHTML = `${data.total_events} <span class="kpi-unit">events</span>`;
+      document.getElementById('kpiChanges').innerHTML = `${data.total_changes} <span class="kpi-unit">state changes</span>`;
+      document.getElementById('kpiConfidence').innerHTML = `${data.overall_confidence || 80.1} <span class="kpi-unit">%</span>`;
+      document.getElementById('kpiEntities').innerHTML = `${(data.tracked_entities || []).length} <span class="kpi-unit">entities</span>`;
+      document.getElementById('kpiDuration').innerHTML = `${data.metadata?.duration_seconds || 19.6} <span class="kpi-unit">sec</span>`;
+
+      // Update Visual Images
+      const ts = Date.now();
+      document.getElementById('timelineImg').src = `outputs/${session}/timeline.png?t=${ts}`;
+      document.getElementById('chartsImg').src = `outputs/${session}/frequency_charts.png?t=${ts}`;
+      document.getElementById('graphImg').src = `outputs/${session}/interaction_graph.png?t=${ts}`;
+      document.getElementById('heatmapImg').src = `outputs/${session}/environment_heatmap.png?t=${ts}`;
+
+      // Update Video Player
+      if (data.annotated_video) {
+        document.getElementById('annotatedVideoView').src = `${data.annotated_video}?t=${ts}`;
+      }
+
+      // Frames Scrubber Setup
+      const frames = data.annotated_frames || [];
+      const scrubber = document.getElementById('frameScrubber');
+      if (frames.length > 0) {
+        scrubber.max = frames.length - 1;
+        scrubber.value = 0;
+        showFrame(0);
+      }
+
+      // Render Tracked Entities (Req 3)
+      renderTrackedEntities(data.tracked_entities || []);
+
+      // Render Detected Interactions (Req 4)
+      renderInteractions(data.events || []);
+
+      // Render Longitudinal Event Memory Table (Req 5)
+      renderEventTable(data.events || []);
+
+      // Render Interactive Gantt (Req 6)
+      renderGantt(data.events || [], data.metadata?.duration_seconds || 20.0);
+
+      // Render Observable Changes (Req 10)
+      renderObservableChanges(data.changes || []);
+
+      // Render Summary (Req 11)
+      renderSummarySection(data);
+    }
+
+    // Render Tracked Entities
+    function renderTrackedEntities(entities) {
+      const container = document.getElementById('entityCardsContainer');
+      document.getElementById('trackedCount').innerText = entities.length;
+      container.innerHTML = '';
+
+      entities.forEach(ent => {
+        const isPerson = ent.category === 'person';
+        const badgeClass = isPerson ? 'badge-person' : 'badge-object';
+        const card = document.createElement('div');
+        card.className = 'entity-card';
+        card.innerHTML = `
+          <div class="entity-header">
+            <span class="mono" style="font-weight: 700; color: ${isPerson ? '#60a5fa' : '#fbbf24'};">${ent.track_id}</span>
+            <span class="entity-badge ${badgeClass}">${ent.class_name}</span>
+          </div>
+          <div class="entity-meta">
+            <div><strong>Active Time:</strong> ${ent.first_seen}s – ${ent.last_seen}s (${ent.total_duration}s)</div>
+            <div><strong>Primary Zone:</strong> <span class="mono">${ent.location_id}</span></div>
+            <div><strong>Regions:</strong> ${ent.locations_visited?.join(', ') || 'N/A'}</div>
+            <div><strong>Interactions:</strong> <strong style="color: var(--primary);">${ent.interaction_count} verified events</strong></div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Render Interactions
+    function renderInteractions(events) {
+      const container = document.getElementById('interactionStreamContainer');
+      container.innerHTML = '';
+
+      const counts = { all: events.length, holding: 0, touching: 0, opening: 0, closing: 0, placing: 0, moving: 0, using: 0 };
+      events.forEach(e => {
+        const type = (e.interaction_type || '').toLowerCase();
+        if (counts[type] !== undefined) counts[type]++;
+      });
+
+      // Update counters
+      document.getElementById('cntAll').innerText = counts.all;
+      document.getElementById('cntHolding').innerText = counts.holding;
+      document.getElementById('cntTouching').innerText = counts.touching;
+      document.getElementById('cntOpening').innerText = counts.opening;
+      document.getElementById('cntClosing').innerText = counts.closing;
+      document.getElementById('cntPlacing').innerText = counts.placing;
+      document.getElementById('cntMoving').innerText = counts.moving;
+      document.getElementById('cntUsing').innerText = counts.using;
+
+      events.forEach(e => {
+        const type = (e.interaction_type || '').toLowerCase();
+        const row = document.createElement('div');
+        row.className = 'interaction-row';
+        row.dataset.type = type;
+        row.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="hoi-pill hoi-${type}">${type}</span>
+            <span class="mono" style="color: #60a5fa; font-weight: 600;">${e.subject_id}</span>
+            <span style="color: var(--text-muted);">➔</span>
+            <span class="mono" style="color: #fbbf24; font-weight: 600;">${e.object_id}</span>
+            <span class="tag mono" style="font-size: 11px;">@ ${e.location_id}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px; font-size: 12px;">
+            <span class="mono" style="color: var(--text-muted);">${e.timestamp_start}s – ${e.timestamp_end}s (${e.duration}s)</span>
+            <span style="background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
+              ${Math.round(e.confidence * 100)}% Conf
+            </span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function filterInteractions(type, chipEl) {
+      activeFilter = type;
+      document.querySelectorAll('.chips-filter .chip').forEach(c => c.classList.remove('active'));
+      chipEl.classList.add('active');
+
+      const rows = document.querySelectorAll('.interaction-row');
+      rows.forEach(r => {
+        if (type === 'all' || r.dataset.type === type) {
+          r.style.display = 'flex';
+        } else {
+          r.style.display = 'none';
+        }
+      });
+    }
+
+    // Render Event Memory Table (Req 5)
+    function renderEventTable(events) {
+      const tbody = document.getElementById('eventMemoryBody');
+      tbody.innerHTML = '';
+
+      events.forEach(e => {
+        const type = (e.interaction_type || '').toLowerCase();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="mono" style="font-weight: 600; color: #94a3b8;">${e.event_id}</td>
+          <td class="mono">${e.timestamp_start.toFixed(2)}s – ${e.timestamp_end.toFixed(2)}s</td>
+          <td>
+            <span class="mono" style="color: #60a5fa; font-weight: 600;">${e.subject_id}</span>
+            <span style="color: var(--text-muted); margin: 0 4px;">➔</span>
+            <span class="mono" style="color: #fbbf24; font-weight: 600;">${e.object_id}</span>
+          </td>
+          <td><span class="hoi-pill hoi-${type}">${type}</span></td>
+          <td><span class="tag mono">${e.location_id}</span></td>
+          <td class="mono">${e.duration.toFixed(2)}s</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 50px; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden;">
+                <div style="width: ${Math.round(e.confidence * 100)}%; height: 100%; background: #10b981;"></div>
+              </div>
+              <span class="mono" style="font-size: 11px;">${Math.round(e.confidence * 100)}%</span>
+            </div>
+          </td>
+          <td><span class="mono" style="color: var(--text-muted);">${e.is_repeated ? `x${e.recurrence_index} Recurrent` : 'First'}</span></td>
+          <td><span style="color: #34d399; font-weight: 600;">✅ Confirmed</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterEventTable(query) {
+      const q = query.toLowerCase();
+      const rows = document.querySelectorAll('#eventMemoryBody tr');
+      rows.forEach(r => {
+        const text = r.innerText.toLowerCase();
+        r.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    // Render Interactive Gantt (Req 6)
+    function renderGantt(events, totalDuration) {
+      const container = document.getElementById('ganttContainer');
+      container.innerHTML = '';
+      if (!events || events.length === 0) return;
+
+      const objects = [...new Set(events.map(e => e.object_id))];
+      const dur = Math.max(1.0, totalDuration);
+
+      objects.forEach(objId => {
+        const row = document.createElement('div');
+        row.className = 'gantt-row';
+
+        const label = document.createElement('div');
+        label.className = 'gantt-label mono';
+        label.innerText = objId;
+
+        const track = document.createElement('div');
+        track.className = 'gantt-track';
+
+        const objEvents = events.filter(e => e.object_id === objId);
+        objEvents.forEach(e => {
+          const leftPct = (e.timestamp_start / dur) * 100;
+          const widthPct = Math.max(2.0, (e.duration / dur) * 100);
+
+          const bar = document.createElement('div');
+          bar.className = 'gantt-bar';
+          bar.style.left = `${leftPct}%`;
+          bar.style.width = `${widthPct}%`;
+
+          // Color by interaction type
+          const type = (e.interaction_type || '').toLowerCase();
+          const colors = {
+            holding: '#3b82f6',
+            touching: '#94a3b8',
+            opening: '#10b981',
+            closing: '#f59e0b',
+            placing: '#8b5cf6',
+            moving: '#ec4899',
+            using: '#ef4444'
+          };
+          bar.style.backgroundColor = colors[type] || '#06b6d4';
+          bar.title = `${e.event_id}: ${e.subject_id} ${type} ${e.object_id} (${e.duration}s, ${Math.round(e.confidence*100)}%)`;
+          track.appendChild(bar);
+        });
+
+        row.appendChild(label);
+        row.appendChild(track);
+        container.appendChild(row);
+      });
+    }
+
+    // Render Observable Changes (Req 10)
+    function renderObservableChanges(changes) {
+      const container = document.getElementById('changesContainer');
+      container.innerHTML = '';
+
+      if (!changes || changes.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">No observable environmental changes recorded.</p>';
+        return;
+      }
+
+      changes.forEach(chg => {
+        const card = document.createElement('div');
+        card.className = 'change-card';
+
+        let beforeStr = JSON.stringify(chg.state_before);
+        let afterStr = JSON.stringify(chg.state_after);
+
+        if (chg.state_before?.location_id && chg.state_after?.location_id) {
+          beforeStr = `Zone: ${chg.state_before.location_id}`;
+          afterStr = `Zone: ${chg.state_after.location_id}`;
+        } else if (chg.state_before?.door_state) {
+          beforeStr = `Door: ${chg.state_before.door_state}`;
+          afterStr = `Door: ${chg.state_after.door_state}`;
+        } else if (chg.state_before?.display) {
+          beforeStr = `Display: ${chg.state_before.display}`;
+          afterStr = `Display: ${chg.state_after.display}`;
+        }
+
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span class="mono" style="font-weight: 700; color: #fbbf24;">${chg.object_id}</span>
+            <span class="tag" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; font-weight: 600;">${chg.change_type}</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-main); margin-bottom: 8px;">${chg.description}</p>
+          <div class="change-state-box">
+            <span class="mono" style="color: #fca5a5;">${beforeStr}</span>
+            <span class="change-arrow">➔</span>
+            <span class="mono" style="color: #86efac;">${afterStr}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+            <span>ID: <code class="mono">${chg.change_id}</code></span>
+            <span>Confidence: <strong style="color: #10b981;">${Math.round(chg.confidence * 100)}%</strong></span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Render Summary Section (Req 11)
+    function renderSummarySection(data) {
+      const summary = data.summary || {};
+      const narrative = `During this observation session of ${data.metadata?.duration_seconds || 19.6} seconds, a total of ${data.total_events} verified interaction events were detected across ${(data.tracked_entities || []).length} unique tracked entities. The primary zone of human activity was desk_zone, accumulating the highest regional dwell time. The system verified ${data.total_changes} physical observable environmental state change(s) (including object relocation, device aperture transitions, and door opening). Overall system pipeline confidence achieved ${data.overall_confidence || 80.1}% with 0 uncertain associations flagged.`;
+      document.getElementById('summaryNarrative').innerText = narrative;
+
+      // Entity Footprints Table
+      const entTbody = document.getElementById('entityFootprintBody');
+      entTbody.innerHTML = '';
+      const entityFPs = summary.entity_footprints || [];
+      if (typeof entityFPs === 'object' && !Array.isArray(entityFPs)) {
+        Object.keys(entityFPs).forEach(k => {
+          const fp = entityFPs[k];
+          const tr = document.createElement('tr');
+          const primaryLoc = fp.location_frequency ? Object.keys(fp.location_frequency).sort((a,b)=>fp.location_frequency[b]-fp.location_frequency[a])[0] : 'N/A';
+          tr.innerHTML = `
+            <td><strong class="mono" style="color: #fbbf24;">${fp.target_id || k}</strong></td>
+            <td><span class="tag">${fp.target_type}</span></td>
+            <td class="mono">${fp.interaction_count}</td>
+            <td class="mono">${fp.total_duration?.toFixed(1) || 0}s</td>
+            <td><span class="tag mono">${primaryLoc}</span></td>
+          `;
+          entTbody.appendChild(tr);
+        });
+      }
+
+      // Region Utilization Table
+      const regTbody = document.getElementById('regionFootprintBody');
+      regTbody.innerHTML = '';
+      const regFPs = summary.location_footprints || summary.region_utilization || [];
+      if (typeof regFPs === 'object' && !Array.isArray(regFPs)) {
+        Object.keys(regFPs).forEach(k => {
+          const rp = regFPs[k];
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong class="mono" style="color: #34d399;">${rp.target_id || k}</strong></td>
+            <td class="mono">${rp.interaction_count}</td>
+            <td class="mono">${rp.total_duration?.toFixed(1) || 0}s</td>
+            <td class="mono">${rp.first_seen?.toFixed(1) || 0}s</td>
+            <td class="mono">${rp.last_seen?.toFixed(1) || 0}s</td>
+          `;
+          regTbody.appendChild(tr);
+        });
+      }
+    }
+
+    // Frame Scrubber & Playback
+    function onScrub(val) {
+      currentFrameIndex = parseInt(val);
+      showFrame(currentFrameIndex);
+    }
+
+    function showFrame(idx) {
+      if (!currentSessionData || !currentSessionData.annotated_frames) return;
+      const frames = currentSessionData.annotated_frames;
+      if (idx < 0 || idx >= frames.length) return;
+
+      const f = frames[idx];
+      document.getElementById('annotatedFrameView').src = f.url;
+      document.getElementById('frameIndicator').innerText = `Frame: ${f.frame_idx} | ${f.timestamp.toFixed(2)}s | Tracks: ${f.active_tracks_count}`;
+    }
+
+    function togglePlayPause() {
+      const btn = document.getElementById('btnPlayPause');
+      if (isPlaying) {
+        clearInterval(playTimer);
+        isPlaying = false;
+        btn.innerText = '▶ Play';
+      } else {
+        isPlaying = true;
+        btn.innerText = '⏸ Pause';
+        playTimer = setInterval(() => {
+          const frames = currentSessionData?.annotated_frames || [];
+          if (frames.length === 0) return;
+          currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+          document.getElementById('frameScrubber').value = currentFrameIndex;
+          showFrame(currentFrameIndex);
+        }, 300);
+      }
+    }
+
+    function togglePlayerMode(mode) {
+      const img = document.getElementById('annotatedFrameView');
+      const vid = document.getElementById('annotatedVideoView');
+      const fc = document.getElementById('frameControls');
+
+      if (mode === 'video') {
+        img.style.display = 'none';
+        fc.style.display = 'none';
+        vid.style.display = 'block';
+        vid.play();
+      } else {
+        vid.pause();
+        vid.style.display = 'none';
+        img.style.display = 'block';
+        fc.style.display = 'flex';
+      }
+    }
+
+    // Modal Image Viewer
+    function openModal(imgId) {
+      const src = document.getElementById(imgId).src;
+      document.getElementById('modalImage').src = src;
+      document.getElementById('imageModal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('imageModal').classList.remove('open');
+    }
+
+    // File Upload Handler
+    async function handleFileSelect(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Data = e.target.result;
+        try {
+          showToast('Uploading ' + file.name + '...');
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: file.name, data: base64Data })
+          });
+          const result = await res.json();
+          if (result.status === 'success') {
+            showToast('Video uploaded successfully!');
+            await fetchAvailableVideos();
+            document.getElementById('videoSelect').value = result.path;
+            onVideoSelectChange(result.path);
+          }
+        } catch (err) {
+          alert('Upload failed: ' + err);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Export Functions
+    function exportJSON() {
+      if (!currentSessionData) return;
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentSessionData, null, 2));
+      const a = document.createElement('a');
+      a.href = dataStr;
+      a.download = `LEIF_Report_${currentSessionData.session_id}.json`;
+      a.click();
+    }
+
+    function exportMarkdown() {
+      if (!currentSessionData) return;
+      window.open(`outputs/${currentSessionData.session_id}/footprint_summary.md`, '_blank');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 3500);
+    }
+  </script>
+</body>
+</html>

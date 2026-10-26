@@ -1,0 +1,110 @@
+# ==============================================================================
+# LONGITUDINAL ENVIRONMENTAL INTERACTION FOOTPRINT (LEIF)
+# Master Configuration File
+# ==============================================================================
+
+project:
+  name: "LEIF"
+  version: "1.0.0"
+  description: "Longitudinal Environmental Interaction Footprint System"
+  default_environment: "office_lab"
+
+# 1. Video Acquisition & Sampling
+video_acquisition:
+  target_fps: 2.0                 # Temporal sampling rate (frames/sec) to avoid redundant per-frame processing
+  clip_window_seconds: 5.0        # Window size for short-term temporal feature aggregation
+  supported_extensions:
+    - ".mp4"
+    - ".avi"
+    - ".mov"
+    - ".mkv"
+  resize_resolution: [1280, 720]  # Width x Height normalization
+  temporal_sampling_mode: "uniform" # Options: 'uniform', 'keyframe', 'adaptive_motion'
+
+# 2. Scene and Object Detection
+detection:
+  detector_type: "pretrained"     # Options: 'pretrained', 'mock_benchmark', 'custom'
+  confidence_threshold: 0.45
+  target_classes:
+    subjects: ["person"]
+    objects: ["cup", "bottle", "laptop", "chair", "door", "refrigerator", "book", "phone", "backpack"]
+    surfaces: ["table", "desk", "countertop", "shelf"]
+    environmental_regions: ["desk_zone", "doorway", "coffee_station", "meeting_table"]
+
+# 3. Multi-Object Tracking & Re-Identification
+tracking:
+  tracker_type: "spatial_appearance" # Spatial IoU + feature appearance cosine distance
+  max_disappeared_frames: 30         # Maximum frame gap before dropping tracklet
+  reid_similarity_threshold: 0.65    # Threshold for matching re-emerged entities
+  uncertainty_logging: true          # Do not blindly merge different entities
+
+# 4. Human-Object Interaction (HOI) Recognition
+hoi_recognition:
+  interaction_types:
+    - "holding"
+    - "touching"
+    - "opening"
+    - "closing"
+    - "placing"
+    - "moving"
+    - "using"
+  interaction_distance_threshold: 120 # Pixel distance threshold between person hand/centroid and object
+  confidence_threshold: 0.50
+
+# 5. Spatio-Temporal Scene Graph
+scene_graph:
+  update_rate_hz: 2.0
+  capture_spatial_relations: true
+  spatial_relations: ["on_top_of", "adjacent_to", "inside", "near"]
+
+# 6. Event Validation
+event_validation:
+  min_interaction_duration_sec: 1.0  # Filter out transient false-positive single-frame touches
+  max_temporal_gap_sec: 2.0          # Max gap to merge into continuous interaction
+  deduplication_window_sec: 3.0
+  min_event_confidence: 0.55
+
+# 7. Longitudinal Memory
+longitudinal_memory:
+  storage_type: "sqlite"             # SQLite or JSON structured store
+  db_path: "data/memory_store/leif_longitudinal_memory.db"
+  link_recurrence: true
+  recurrence_lookback_days: 30
+
+# 8. Environmental Change Analyzer
+change_analysis:
+  displacement_threshold_pixels: 50  # Minimum movement to declare 'object moved'
+  track_states:
+    - "open_close"                   # e.g., door / cabinet / laptop
+    - "spatial_displacement"         # moved across regions
+    - "placement_surface"            # table -> counter
+
+# 9. Footprint Aggregator
+footprint:
+  aggregation_metrics:
+    - "interaction_count"
+    - "total_duration"
+    - "first_seen"
+    - "last_seen"
+    - "recurrence_interval"
+    - "location_frequency"
+    - "interaction_frequency"
+    - "confidence"
+    - "observable_changes"
+
+# 10. Visualization Layer
+visualization:
+  timeline_output_dir: "outputs/timelines"
+  graph_output_dir: "outputs/graphs"
+  heatmap_output_dir: "outputs/heatmaps"
+  summary_output_dir: "outputs/summaries"
+
+# 11. Longitudinal Comparison
+session_comparison:
+  supported_durations: [60, 300, 900, 3600] # 1m, 5m, 15m, 1h
+
+# 12. Privacy and Data Minimization
+privacy:
+  anonymize_subject_identity: true   # Store as subject_P001 rather than biometric identifiers
+  blur_faces_in_debug_render: true
+  event_level_only: true             # Prefer discarding raw frames once structured event is stored
